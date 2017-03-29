@@ -71,7 +71,7 @@ $(document).ready(function() {
 		var diffTime = moment().diff(moment(firstTimeConverted), "minutes");
 		var timeRemain = diffTime % trainFreq;
 		var minAway = trainFreq - timeRemain;
-		var nextTrain = moment().add(minAway, "minutes");
+		var nextTrain = moment().add(minAway, "hh:mm");
 
 		$("#train-schedule > tbody").append("<tr><td>" + trainName + "</td><td>" + trainDest + "</td><td>" +
 			trainFreq + "</td><td>" + nextTrain + "</td><td>" + minAway + "</td>");
