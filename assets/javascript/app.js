@@ -46,11 +46,6 @@ $(document).ready(function() {
 
 		database.ref().push(newTrain);
 
-		console.log(newTrain.name);
-		console.log(newTrain.dest);
-		console.log(newTrain.first);
-		console.log(newTrain.freq);
-
 		$("#name-input").val("");
 		$("#destination-input").val("");
 		$("#first-train-input").val("");
@@ -71,12 +66,17 @@ $(document).ready(function() {
 		var diffTime = moment().diff(moment(firstTimeConverted), "minutes");
 		var timeRemain = diffTime % trainFreq;
 		var minAway = trainFreq - timeRemain;
-		var nextTrain = moment().add(minAway, "hh:mm");
+		var nextTrain = moment().add(minAway, "minutes").format("hh:mm");
+
 
 		$("#train-schedule > tbody").append("<tr><td>" + trainName + "</td><td>" + trainDest + "</td><td>" +
 			trainFreq + "</td><td>" + nextTrain + "</td><td>" + minAway + "</td>");
 
 	});
+
+	// setTimeout(function(){
+	// 	window.location.reload(1);
+	// }, 60000);
 });
 
 
