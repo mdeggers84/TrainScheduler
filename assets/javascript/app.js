@@ -11,6 +11,7 @@ $(document).ready(function() {
 	
 	var database = firebase.database();
 	var provider = new firebase.auth.GithubAuthProvider();
+	var interval = setInterval(updateTable, 60000);
 
 	firebase.auth().signInWithPopup(provider).then(function(result) {
 	  // This gives you a GitHub Access Token. You can use it to access the GitHub API.
@@ -28,6 +29,34 @@ $(document).ready(function() {
 	  var credential = error.credential;
 	  // ...
 	});
+
+	function getData(trainData) {
+		console.log(trainData);
+		var name = trainData.name;
+		var dest = trainData.dest;
+		var first = trainData.first;
+		var freq = trainData.freq;
+
+		var firstConverted = moment(first, "hh:mm").subtract(1, "years");
+		var currentTime = moment();
+		var diffTime = moment().diff(moment(firstConverted), "minutes");
+		var timeRemain = diffTime % freq;
+		var minAway = freq - timeRemain;
+		var nextTrain = moment().add(minAway, "minutes").format("hh:mm");
+
+		$("#train-schedule > tbody").append("<tr><td>" + name + "</td><td>" + dest + "</td><td>" +
+			freq + "</td><td>" + nextTrain + "</td><td>" + minAway + "</td>");
+	}
+
+	function updateTable() {
+		$("#train-schedule > tbody").empty();
+		console.log("update");
+		database.ref().on("value", function(snapshot) {
+			snapshot.forEach(function(childSnapshot) {
+				getData(childSnapshot.val());
+			});
+		});
+	}
 
 	$("#add-train-btn").on("click", function(event) {
 		event.preventDefault();
@@ -54,29 +83,10 @@ $(document).ready(function() {
 	});
 
 	database.ref().on("child_added", function(childSnapshot, prevChildKey) {
-		console.log(childSnapshot.val());
 
-		var trainName = childSnapshot.val().name;
-		var trainDest = childSnapshot.val().dest;
-		var firstTrain = childSnapshot.val().first;
-		var trainFreq = childSnapshot.val().freq;
-
-		var firstTimeConverted = moment(firstTrain, "hh:mm").subtract(1, "years");
-		var currentTime = moment();
-		var diffTime = moment().diff(moment(firstTimeConverted), "minutes");
-		var timeRemain = diffTime % trainFreq;
-		var minAway = trainFreq - timeRemain;
-		var nextTrain = moment().add(minAway, "minutes").format("hh:mm");
-
-
-		$("#train-schedule > tbody").append("<tr><td>" + trainName + "</td><td>" + trainDest + "</td><td>" +
-			trainFreq + "</td><td>" + nextTrain + "</td><td>" + minAway + "</td>");
+		getData(childSnapshot.val());
 
 	});
-
-	// setTimeout(function(){
-	// 	window.location.reload(1);
-	// }, 60000);
 });
 
 
