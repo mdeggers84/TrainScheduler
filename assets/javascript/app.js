@@ -10,9 +10,16 @@ $(document).ready(function() {
 	firebase.initializeApp(config);
 	
 	var database = firebase.database();
-	var provider = new firebase.auth.GithubAuthProvider();
 	var interval = setInterval(updateTable, 60000);
 
+	var provider = new firebase.auth.GoogleAuthProvider();
+	firebase.auth().signInWithRedirect(provider);
+
+	/*
+
+	var provider = new firebase.auth.GithubAuthProvider();
+	
+	// sets up gitHub authentication (might switch to google later)
 	firebase.auth().signInWithPopup(provider).then(function(result) {
 	  // This gives you a GitHub Access Token. You can use it to access the GitHub API.
 	  var token = result.credential.accessToken;
@@ -30,8 +37,10 @@ $(document).ready(function() {
 	  // ...
 	});
 
-	function getData(trainData) {
-		console.log(trainData);
+	*/
+
+	// posts data to webPage
+	function postData(trainData, trainKey) {
 		var name = trainData.name;
 		var dest = trainData.dest;
 		var first = trainData.first;
@@ -44,20 +53,24 @@ $(document).ready(function() {
 		var minAway = freq - timeRemain;
 		var nextTrain = moment().add(minAway, "minutes").format("hh:mm");
 
-		$("#train-schedule > tbody").append("<tr><td>" + name + "</td><td>" + dest + "</td><td>" +
-			freq + "</td><td>" + nextTrain + "</td><td>" + minAway + "</td>");
+		$("#train-schedule > tbody").append("<tr id=" + trainKey + "><td>" + 
+		name + "</td><td>" + dest + "</td><td>" + freq + "</td><td>" + nextTrain + 
+		"</td><td>" + minAway + "</td><td><button class='btn btn-default delete' key=" + 
+		trainKey + ">X</button></td>");
 	}
 
+	// checks each child on firebase and posts to table
 	function updateTable() {
 		$("#train-schedule > tbody").empty();
 		console.log("update");
 		database.ref().on("value", function(snapshot) {
 			snapshot.forEach(function(childSnapshot) {
-				getData(childSnapshot.val());
+				postData(childSnapshot.val(), childSnapshot.key);
 			});
 		});
 	}
 
+	// pushes new data to firebase on click
 	$("#add-train-btn").on("click", function(event) {
 		event.preventDefault();
 
@@ -79,13 +92,18 @@ $(document).ready(function() {
 		$("#destination-input").val("");
 		$("#first-train-input").val("");
 		$("#freq-input").val("");
-
 	});
 
+	// deletes current row of data locally and on firebase
+	$(document).on("click", ".delete", function() {
+		var key = $(this).attr("key");
+		database.ref().child(key).remove();
+		$("#" + key).empty();
+	});
+
+	// calls functions to update table when new train is added
 	database.ref().on("child_added", function(childSnapshot, prevChildKey) {
-
-		getData(childSnapshot.val());
-
+		postData(childSnapshot.val(), childSnapshot.key);
 	});
 });
 
